@@ -23,6 +23,7 @@ public:
     bool estaDesgastada() const { return usos_maximos > 0 && usos_restantes <= 0; }
 
     void reduzirUso();  // Só reduz se não for infinita
+    int getUsosRestantes() const { return usos_restantes; }
 };
 
 #endif // FERRAMENTA_H

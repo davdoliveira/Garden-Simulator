@@ -1,38 +1,45 @@
 #ifndef JARDIM_H
 #define JARDIM_H
 
-#include "celula.h"
+#include <vector>
 #include <string>
+#include "celula.h"
+#include "jardineiro.h" // Incluir jardineiro para a composição
 
-class Jardineiro; // Forward Declaration
 class Jardim {
 private:
-    Celula** grelha;
+    Celula** grelha; // Matriz dinâmica (Array de Arrays)
     int linhas;
     int colunas;
-    Jardineiro* jardineiro = nullptr; // NOVO: Agregação do Jardineiro (Meta 1)
+    Jardineiro* jardineiro; // O Jardineiro pertence ao Jardim
 
 public:
-    //inicializa a grelha com o tamanho especificado
+    // Construtor e Destrutor
     Jardim(int lin, int col);
-
-    //libera a memória alocada
     ~Jardim();
 
-    //imprimir a grelha com a régua
-    void imprimir();
-
-    // NOVO: Getters para as dimensões (CRÍTICO para a validação de comandos)
+    // Métodos de Acesso
     int getLinhas() const { return linhas; }
     int getColunas() const { return colunas; }
 
-    // Corrigido: A assinatura deve ser apenas declarada no .h (implementação no .cpp)
+    // Gestão do Tabuleiro
+    Celula& getCelula(int lin, int col);
+    bool posicaoValida(int lin, int col) const;
+    std::string posicaoParaString(int lin, int col) const;
+    void imprimir();
+
+    // Motor de Simulação
     void atualizarInstante();
 
-    bool posicaoValida(int lin, int col) const;
-    Celula& getCelula(int lin, int col);
-    void adicionarPlanta(const std::string& tipo, const std::string& pos);
-    std::string posicaoParaString(int lin, int col) const;
+    void adicionarPlanta(const std::string& tipo, int linha, int coluna);
+    void removerPlanta(int linha, int coluna);
+
+    void moverJardineiro(const std::string& direcao);
+    void usarFerramentaJardineiro(char tipo);
+    void comprarFerramenta(const std::string& tipo);
+
+    void listarFerramentasJardineiro() const;
+    void prepararNovaJogada(); // Reseta o jardineiro
 };
 
-#endif //JARDIM_H
+#endif

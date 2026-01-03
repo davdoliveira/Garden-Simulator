@@ -8,6 +8,7 @@ public:
     Regador();
     void usar(Jardim* jardim, int lin, int col) override;
     std::string getTipo() const override;
+
 };
 
 #endif // REGADOR_H

@@ -43,6 +43,10 @@ char Celula::getSimbolo() const {
     }
 }
 
+void Celula::esquecerFerramenta() {
+    ferramenta = nullptr; // Apenas coloca a null, NÃO faz delete!
+}
+
 Celula::~Celula() {
     delete planta;
     delete ferramenta;

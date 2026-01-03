@@ -11,5 +11,5 @@ void Regador::usar(Jardim* jardim, int lin, int col) {
 }
 
 std::string Regador::getTipo() const {
-    return "regador";
+    return "Regador";
 }

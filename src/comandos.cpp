@@ -1,4 +1,5 @@
 #include "../include/comandos.h"
+#include "../include/planta.h"
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -41,6 +42,7 @@ bool Comando::processar(const string& comando) {
     if (numTokens == 0) return true;
 
     string nomeComando = tokens[0];
+
     // --- 1. VALIDAÇÃO: Comando 'jardim <n> <n>' ---
     if (nomeComando == "jardim") {
         if (jardim != nullptr) {
@@ -55,13 +57,11 @@ bool Comando::processar(const string& comando) {
         stringstream ss_linhas(tokens[1]);
         stringstream ss_colunas(tokens[2]);
 
-        // Tenta extrair os números. Se falhar (ou se sobrar lixo, ex: "10a") dá erro.
         if (!(ss_linhas >> linhas) || !(ss_colunas >> colunas) || !ss_linhas.eof() || !ss_colunas.eof()) {
             cout << "Erro de sintaxe: As dimensoes devem ser numeros inteiros." << endl;
             return true;
         }
 
-        // Lógica original de validação
         if (linhas < 1 || linhas > 26 || colunas < 1 || colunas > 26) {
             cout << "Erro: Dimensoes invalidas! Insira valores entre 1 e 26." << endl;
             return true;
@@ -71,9 +71,9 @@ bool Comando::processar(const string& comando) {
         jardim->imprimir();
         return true;
     }
-    // --- 2. VALIDAÇÃO: Comando 'sair' e 'fim' ---
-    if (nomeComando == "sair" || nomeComando == "fim") { //
 
+    // --- 2. VALIDAÇÃO: Comando 'sair' e 'fim' ---
+    if (nomeComando == "sair" || nomeComando == "fim") {
         if (numTokens != 1) {
             cout << "Erro: O comando '" << nomeComando << "' nao aceita parametros." << endl;
             return true;
@@ -84,8 +84,7 @@ bool Comando::processar(const string& comando) {
 
     // --- VERIFICAÇÃO: JARDIM EXISTENTE ---
     if (jardim == nullptr) {
-        // Permite apenas o comando 'executa' antes do 'jardim'
-        if (nomeComando == "executa") { //
+        if (nomeComando == "executa") {
             if (numTokens != 2) {
                 cout << "Sintaxe invalida. Uso correto: executa <nome-do-ficheiro>" << endl;
                 return true;
@@ -127,19 +126,24 @@ bool Comando::processar(const string& comando) {
         int instantes = 1;
         if (numTokens == 2) {
             stringstream ss_instantes(tokens[1]);
-
             if (!(ss_instantes >> instantes) || !ss_instantes.eof()) {
                 cout << "Erro: O parametro para 'avanca' deve ser um numero inteiro." << endl;
                 return true;
             }
-
             if (instantes <= 0) {
                 cout << "Erro: O numero de instantes deve ser um valor inteiro positivo." << endl;
                 return true;
             }
         }
-        cout << "Validado! Avancando " << instantes << " instante(s)..." << endl;
-        jardim->imprimir();
+
+        // --- EXECUÇÃO: LIGAÇÃO À LÓGICA DE SIMULAÇÃO ---
+        cout << "Simulando " << instantes << " instante(s)..." << endl;
+        for (int i = 0; i < instantes; i++) {
+            jardim->atualizarInstante(); // Chama o motor do jardim
+        }
+        // O tempo passou, o jardineiro descansa para o próximo turno do utilizador
+        jardim->prepararNovaJogada(); // <--- ADICIONA ISTO
+        jardim->imprimir(); // Mostra o resultado final
         return true;
 
     // --- 5. VALIDAÇÃO: Comando 'planta <l><c> <tipo>' ---
@@ -163,7 +167,9 @@ bool Comando::processar(const string& comando) {
             cout << "Erro: Tipo de planta '" << tipoString << "' invalido. Use 'c', 'r', 'e' ou 'x'." << endl;
             return true;
         }
-        cout << "Validado! Planta '" << tipoString << "' pronta para ser plantada na posicao " << posString << "." << endl;
+
+        // --- EXECUÇÃO: LIGAÇÃO À LÓGICA DE PLANTAR ---
+        jardim->adicionarPlanta(tipoString, pos.linha, pos.coluna);
         jardim->imprimir();
         return true;
 
@@ -183,63 +189,100 @@ bool Comando::processar(const string& comando) {
             cout << "Erro: Posicao '" << posString << "' esta fora dos limites do jardim." << endl;
             return true;
         }
-        cout << "Validado! Pronto para colher na posicao " << posString << "." << endl;
+
+        // --- EXECUÇÃO: LIGAÇÃO À LÓGICA DE COLHER ---
+        jardim->removerPlanta(pos.linha, pos.coluna);
         jardim->imprimir();
         return true;
 
-    // --- 7. VALIDAÇÃO: Comando 'lplanta <l><c>' ---
+    // --- 7. VALIDAÇÃO E EXECUÇÃO: Comando 'lplanta <l><c>' ---
     } else if (nomeComando == "lplanta") {
         if (numTokens != 2) {
-            cout << "Sintaxe invalida para 'lplanta'. Uso correto: lplanta <posicao> (ex: lplanta ej)" << endl;
+            cout << "Sintaxe invalida para 'lplanta'. Uso correto: lplanta <posicao>" << endl;
             return true;
         }
         string posString = tokens[1];
         Coordenadas pos = stringParaPosicao(posString);
-        if (!pos.valida) {
-            cout << "Erro: Posicao '" << posString << "' em formato invalido. Use duas letras (ex: aa)." << endl;
+        if (!pos.valida || !jardim->posicaoValida(pos.linha, pos.coluna)) {
+            cout << "Erro: Posicao invalida." << endl;
             return true;
         }
-        if (!jardim->posicaoValida(pos.linha, pos.coluna)) {
-            cout << "Erro: Posicao '" << posString << "' esta fora dos limites do jardim." << endl;
-            return true;
+
+        // --- MOSTRAR DADOS DA PLANTA ---
+        Celula& cel = jardim->getCelula(pos.linha, pos.coluna);
+        Planta* p = cel.getPlanta();
+
+        if (p == nullptr) {
+            cout << "Nao ha planta na posicao " << posString << "." << endl;
+        } else {
+            cout << "--- Planta em " << posString << " ---" << endl;
+            cout << "Especie (Simbolo): " << p->getSimbolo() << endl;
+            cout << "Idade: " << p->getIdade() << " instantes" << endl;
+            cout << "Agua Interna: " << p->getAguaInterna() << endl;
+            cout << "Nutrientes: " << p->getNutrientesInterna() << endl;
+
+            // Dica visual:
+            if (p->getSimbolo() == 'r') cout << "Tipo: Roseira" << endl;
+            else if (p->getSimbolo() == 'c') cout << "Tipo: Cacto" << endl;
+            else if (p->getSimbolo() == 'e') cout << "Tipo: Erva Daninha" << endl;
         }
-        cout << "Validado! Pronto para listar a planta na posicao " << posString << "." << endl;
         return true;
 
-    // --- 8. VALIDAÇÃO: Comando 'lsolo <l><c> [n]' ---
+    // --- 8. VALIDAÇÃO E EXECUÇÃO: Comando 'lsolo <l><c> [n]' ---
     } else if (nomeComando == "lsolo") {
         if (numTokens < 2 || numTokens > 3) {
-            cout << "Sintaxe invalida para 'lsolo'. Uso correto: lsolo <posicao> [raio]" << endl;
+            cout << "Sintaxe invalida. Uso correto: lsolo <posicao> [raio]" << endl;
             return true;
         }
         string posString = tokens[1];
         Coordenadas pos = stringParaPosicao(posString);
-        if (!pos.valida) {
-            cout << "Erro: Posicao '" << posString << "' em formato invalido. Use duas letras (ex: aa)." << endl;
+        if (!pos.valida || !jardim->posicaoValida(pos.linha, pos.coluna)) {
+            cout << "Erro: Posicao invalida." << endl;
             return true;
         }
-        if (!jardim->posicaoValida(pos.linha, pos.coluna)) {
-            cout << "Erro: Posicao '" << posString << "' esta fora dos limites do jardim." << endl;
-            return true;
-        }
+
         int raio = 0;
         if (numTokens == 3) {
-            try {
-                raio = stoi(tokens[2]);
-                if (raio < 0) {
-                    cout << "Erro: O raio [n] deve ser um valor inteiro positivo ou zero." << endl;
-                    return true;
+            try { raio = stoi(tokens[2]); } catch (...) { raio = -1; }
+            if (raio < 0) { cout << "Raio invalido." << endl; return true; }
+        }
+
+        // --- MOSTRAR DADOS DO SOLO ---
+        if (raio == 0) {
+            // Apenas uma célula
+            Celula& cel = jardim->getCelula(pos.linha, pos.coluna);
+            cout << "--- Solo em " << posString << " ---" << endl;
+            cout << "Agua: " << cel.getAgua() << endl;
+            cout << "Nutrientes: " << cel.getNutrientes() << endl;
+        } else {
+            // Área envolvente (quadrado de lado 2*raio + 1)
+            cout << "--- Relatorio de Solo (Centro " << posString << ", Raio " << raio << ") ---" << endl;
+            for (int i = pos.linha - raio; i <= pos.linha + raio; i++) {
+                for (int j = pos.coluna - raio; j <= pos.coluna + raio; j++) {
+                    if (jardim->posicaoValida(i, j)) {
+                        Celula& c = jardim->getCelula(i, j);
+                        string pStr = "";
+                        pStr += (char)('a' + i); pStr += (char)('a' + j);
+                        cout << "Pos " << pStr << ": Agua=" << c.getAgua()
+                             << ", Nut=" << c.getNutrientes() << endl;
+                    }
                 }
-            } catch (const std::exception& e) {
-                cout << "Erro: O parametro [n] para 'lsolo' deve ser um numero inteiro." << endl;
-                return true;
             }
         }
-        cout << "Validado! Pronto para listar o solo na posicao " << posString << " com raio " << raio << "." << endl;
         return true;
 
-    // --- 9. VALIDAÇÃO: Comandos de 1 Token (Listar/Ação) ---
-    } else if (nomeComando == "lplantas" || nomeComando == "larea" || nomeComando == "lferr" || nomeComando == "larga" || nomeComando == "sai") { //
+    // --- 9. NOVO: Comando 'lferr' (Listar Ferramentas) ---
+    } else if (nomeComando == "lferr") {
+        if (numTokens != 1) {
+            cout << "Sintaxe invalida: O comando 'lferr' nao aceita parametros." << endl;
+            return true;
+        }
+        // Chama a função dedicada
+        jardim->listarFerramentasJardineiro();
+        return true;
+
+    // --- 10. Outros Comandos de 1 Token (Genéricos) ---
+    } else if (nomeComando == "lplantas" || nomeComando == "larea" || nomeComando == "larga" || nomeComando == "sai") {
         if (numTokens != 1) {
             cout << "Sintaxe invalida: O comando '" << nomeComando << "' nao aceita parametros." << endl;
             return true;
@@ -247,18 +290,20 @@ bool Comando::processar(const string& comando) {
         cout << "Validado! Pronto para executar '" << nomeComando << "'." << endl;
         return true;
 
-    // --- 10. VALIDAÇÃO: Comandos de Movimento ---
-    } else if (nomeComando == "e" || nomeComando == "d" || nomeComando == "c" || nomeComando == "b") { //
+    // --- 11. VALIDAÇÃO: Comandos de Movimento ---
+    } else if (nomeComando == "e" || nomeComando == "d" || nomeComando == "c" || nomeComando == "b") {
         if (numTokens != 1) {
             cout << "Sintaxe invalida: O comando '" << nomeComando << "' nao aceita parametros." << endl;
             return true;
         }
-        cout << "Validado! Pronto para mover '" << nomeComando << "'." << endl;
+
+        // CHAMA A LÓGICA DE MOVIMENTO DO JARDIM
+        jardim->moverJardineiro(nomeComando);
         jardim->imprimir();
         return true;
 
-    // --- 11. VALIDAÇÃO: Comando 'pega <n>' ---
-    } else if (nomeComando == "pega") { //
+    // --- 12. VALIDAÇÃO: Comando 'pega <n>' ---
+    } else if (nomeComando == "pega") {
         if (numTokens != 2) {
             cout << "Sintaxe invalida para 'pega'. Uso correto: pega <numero_serie>" << endl;
             return true;
@@ -275,22 +320,44 @@ bool Comando::processar(const string& comando) {
         }
         return true;
 
-    // --- 12. VALIDAÇÃO: Comando 'compra <c>' ---
-    } else if (nomeComando == "compra") { //
+    // --- 13. VALIDAÇÃO: Comando 'usar <tipo>' ---
+    } else if (nomeComando == "usar") {
+        if (numTokens != 2) {
+            cout << "Sintaxe invalida. Uso correto: usar <tipo> (ex: usar g)" << endl;
+            return true;
+        }
+
+        // Verifica se é uma letra válida
+        char tipo = tokens[1][0];
+        if (tokens[1].length() > 1 || (tipo != 'g' && tipo != 'a' && tipo != 't' && tipo != 'z')) {
+            cout << "Erro: Tipo invalido. Use 'g', 'a', 't' ou 'z'." << endl;
+            return true;
+        }
+
+        // ACEDER AO JARDINEIRO ATRAVÉS DO JARDIM
+        jardim->usarFerramentaJardineiro(tipo);
+        jardim->imprimir();
+        return true;
+
+    // --- 14. EXECUÇÃO: Comando 'compra <c>' ---
+    } else if (nomeComando == "compra") {
         if (numTokens != 2) {
             cout << "Sintaxe invalida para 'compra'. Uso correto: compra <tipo>" << endl;
             return true;
         }
         string tipoFerramenta = tokens[1];
-        if (tipoFerramenta.length() != 1 || (tipoFerramenta != "g" && tipoFerramenta != "a" && tipoFerramenta != "t" && tipoFerramenta != "z")) { //
-            cout << "Erro: Tipo de ferramenta '" << tipoFerramenta << "' invalido. Use 'g', 'a', 't' ou 'z'." << endl;
+        if (tipoFerramenta.length() != 1 || (tipoFerramenta != "g" && tipoFerramenta != "a" && tipoFerramenta != "t" && tipoFerramenta != "z")) {
+            cout << "Erro: Tipo de ferramenta '" << tipoFerramenta << "' invalido. Use 'g' (regador), 'a' (adubo), 't' (tesoura) ou 'z'." << endl;
             return true;
         }
-        cout << "Validado! Pronto para comprar '" << tipoFerramenta << "'." << endl;
+
+        // CHAMA A FUNÇÃO REAL
+        jardim->comprarFerramenta(tipoFerramenta);
+        jardim->imprimir();
         return true;
 
-    // --- 13. VALIDAÇÃO: Comandos de Ficheiro/Memória ---
-    } else if (nomeComando == "grava" || nomeComando == "recupera" || nomeComando == "apaga") { //
+    // --- 15. VALIDAÇÃO: Comandos de Ficheiro/Memória ---
+    } else if (nomeComando == "grava" || nomeComando == "recupera" || nomeComando == "apaga") {
         if (numTokens != 2) {
             cout << "Sintaxe invalida. Uso correto: " << nomeComando << " <nome>" << endl;
             return true;
@@ -301,5 +368,5 @@ bool Comando::processar(const string& comando) {
     } else {
         cout << "Comando invalido! '" << nomeComando << "' nao e um comando reconhecido." << endl;
     }
-    return true; // Garante que o loop continua
+    return true;
 }

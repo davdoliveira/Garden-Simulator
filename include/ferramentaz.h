@@ -7,6 +7,7 @@ class FerramentaZ : public Ferramenta {
 public:
     FerramentaZ();
     void usar(Jardim* jardim, int lin, int col) override;
+    std::string getTipo() const override { return "FerramentaZ"; }
 };
 
 #endif // FERRAMENTAZ_H

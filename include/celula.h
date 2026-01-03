@@ -33,7 +33,7 @@ public:
 
     void removerPlanta();
     void removerFerramenta();
-
+    void esquecerFerramenta();
     char getSimbolo() const;
 
     ~Celula();

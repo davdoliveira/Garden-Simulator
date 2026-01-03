@@ -15,6 +15,9 @@ private:
     int capacidade;           // Tamanho alocado do array 'ferramentas'
 
     void redimensionar();
+    int cont_movimentos = 0;
+    int cont_plantacoes = 0;
+    int cont_colheitas = 0;
     Jardineiro(const Jardineiro& outro);
     Jardineiro& operator=(const Jardineiro& outro);
 
@@ -32,8 +35,24 @@ public:
 
     // Ferramentas
     void adicionarFerramenta(Ferramenta* f);
-    void usarFerramenta(Jardim* jardim);
+    void usarFerramenta(char tipo, Jardim* jardim);
     bool temFerramenta(const std::string& tipo) const;
+
+    void listarInventario() const;
+
+    // -- FUNÇÕES DE REGRAS ---
+    // Retornam true se ainda tiver energia para a ação
+    bool podeMover() const;
+    bool podePlantar() const;
+    bool podeColher() const;
+
+    // Registam que a ação foi feita (incrementam contador)
+    void registarMovimento();
+    void registarPlantacao();
+    void registarColheita();
+
+    // Zera os contadores (chamado no 'avanca')
+    void descansar();
 };
 
 #endif // JARDINEIRO_H
