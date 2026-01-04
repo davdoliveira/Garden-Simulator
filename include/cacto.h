@@ -27,6 +27,8 @@ public:
 
     // Tenta multiplicar com divisão igual
     bool tentarMultiplicar(Jardim* jardim, int lin, int col);
+
+    Planta* duplicar() const override { return new Cacto(*this); }
 };
 
 #endif // CACTO_H

@@ -9,21 +9,24 @@ class Jardim;
 class Jardineiro {
 private:
     int linha, coluna;
-
-    Ferramenta** ferramentas; // Array dinâmico de ponteiros para Ferramenta
-    int numFerramentas;       // Número de ferramentas atuais
-    int capacidade;           // Tamanho alocado do array 'ferramentas'
-
+    Ferramenta** ferramentas;
+    int numFerramentas;
+    int capacidade;
     void redimensionar();
+
+    // Contadores de Fadiga
     int cont_movimentos = 0;
     int cont_plantacoes = 0;
     int cont_colheitas = 0;
-    Jardineiro(const Jardineiro& outro);
-    Jardineiro& operator=(const Jardineiro& outro);
+    int cont_entradas_saidas = 0;
 
 public:
     Jardineiro(int lin, int col);
-    ~Jardineiro(); // O Destrutor já estava implementado (1/3 da Regra de 3)
+
+    // --- NOVO: Construtor de Cópia (Agora Público) ---
+    Jardineiro(const Jardineiro& outro);
+
+    ~Jardineiro();
 
     // Getters
     int getLinha() const { return linha; }
@@ -37,21 +40,21 @@ public:
     void adicionarFerramenta(Ferramenta* f);
     void usarFerramenta(char tipo, Jardim* jardim);
     bool temFerramenta(const std::string& tipo) const;
-
     void listarInventario() const;
 
-    // -- FUNÇÕES DE REGRAS ---
-    // Retornam true se ainda tiver energia para a ação
+    // Regras de Fadiga
     bool podeMover() const;
     bool podePlantar() const;
     bool podeColher() const;
+    bool podeEntrarOuSair() const;
 
-    // Registam que a ação foi feita (incrementam contador)
+    // Registos
     void registarMovimento();
     void registarPlantacao();
     void registarColheita();
+    void registarEntradaSaida();
 
-    // Zera os contadores (chamado no 'avanca')
+    void sair();
     void descansar();
 };
 

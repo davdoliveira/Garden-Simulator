@@ -2,6 +2,7 @@
 #define COMANDOS_H
 
 #include <string>
+#include <map> // <--- NECESSÁRIO PARA O MAPA DE SAVES
 #include "jardim.h"
 
 struct Coordenadas {
@@ -13,6 +14,10 @@ struct Coordenadas {
 class Comando {
 private:
     Jardim* jardim = nullptr;
+
+    // --- NOVO: Mapa de Saves (Nome -> Ponteiro para Jardim) ---
+    std::map<std::string, Jardim*> saves;
+
     Coordenadas stringParaPosicao(const std::string& pos) const;
 public:
     Comando() = default;

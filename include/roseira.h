@@ -27,6 +27,8 @@ public:
 
     // Função para tentar multiplicar
     bool tentarMultiplicar(Jardim* jardim, int lin, int col);
+
+    Planta* duplicar() const override { return new Roseira(*this); }
 };
 
 #endif // ROSEIRA_H

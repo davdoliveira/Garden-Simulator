@@ -17,6 +17,8 @@ public:
     virtual char getSimbolo() const = 0;
     virtual void atualizar(Jardim* jardim, int lin, int col) = 0;
 
+    virtual Planta* duplicar() const = 0;
+
     // Getters...
     int getAguaInterna() const { return agua_interna; }
     int getNutrientesInterna() const { return nutrientes_interna; }

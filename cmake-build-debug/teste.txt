@@ -1,0 +1,20 @@
+jardim 10 10
+entra aa
+planta aa r
+planta ab c
+planta ac e
+d
+d
+d
+d
+d
+d
+d
+d
+d
+d
+d
+sai
+entra aa
+avanca 1
+entra aa

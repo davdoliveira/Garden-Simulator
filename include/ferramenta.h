@@ -19,6 +19,8 @@ public:
     virtual void usar(Jardim* jardim, int lin, int col) = 0;
     virtual std::string getTipo() const = 0;
 
+    virtual Ferramenta* duplicar() const = 0;
+
     char getSimbolo() const { return simbolo; }
     bool estaDesgastada() const { return usos_maximos > 0 && usos_restantes <= 0; }
 

@@ -8,6 +8,8 @@ public:
     Adubo();
     void usar(Jardim* jardim, int lin, int col) override;
     std::string getTipo() const override { return "Adubo"; }
+
+    Ferramenta* duplicar() const override { return new Adubo(*this); }
 };
 
 #endif // ADUBO_H

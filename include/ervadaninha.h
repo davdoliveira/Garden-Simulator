@@ -20,6 +20,8 @@ public:
     bool tentarMultiplicar(Jardim* jardim, int lin, int col);
 
     bool eFeia() const override { return true; }
+
+    Planta* duplicar() const override { return new ErvaDaninha(*this); }
 };
 
 #endif // ERVADANINHA_H

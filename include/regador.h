@@ -9,6 +9,7 @@ public:
     void usar(Jardim* jardim, int lin, int col) override;
     std::string getTipo() const override;
 
+    Ferramenta* duplicar() const override { return new Regador(*this); }
 };
 
 #endif // REGADOR_H

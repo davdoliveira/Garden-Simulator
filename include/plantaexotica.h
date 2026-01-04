@@ -22,6 +22,8 @@ public:
 
     // Tenta injetar nutrientes (ciclo de 5)
     bool tentarInjetarNutrientes(Jardim* jardim, int lin, int col);
+
+    Planta* duplicar() const override { return new PlantaExotica(*this); }
 };
 
 #endif // PLANTAEXOTICA_H

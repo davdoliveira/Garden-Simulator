@@ -4,18 +4,21 @@
 #include <vector>
 #include <string>
 #include "celula.h"
-#include "jardineiro.h" // Incluir jardineiro para a composição
+#include "jardineiro.h"
 
 class Jardim {
 private:
-    Celula** grelha; // Matriz dinâmica (Array de Arrays)
+    Celula** grelha;
     int linhas;
     int colunas;
-    Jardineiro* jardineiro; // O Jardineiro pertence ao Jardim
+    Jardineiro* jardineiro;
 
 public:
-    // Construtor e Destrutor
     Jardim(int lin, int col);
+
+    // --- NOVO: Construtor de Cópia ---
+    Jardim(const Jardim& outro);
+
     ~Jardim();
 
     // Métodos de Acesso
@@ -28,18 +31,17 @@ public:
     std::string posicaoParaString(int lin, int col) const;
     void imprimir();
 
-    // Motor de Simulação
+    // Motor
     void atualizarInstante();
-
     void adicionarPlanta(const std::string& tipo, int linha, int coluna);
     void removerPlanta(int linha, int coluna);
-
     void moverJardineiro(const std::string& direcao);
     void usarFerramentaJardineiro(char tipo);
     void comprarFerramenta(const std::string& tipo);
-
     void listarFerramentasJardineiro() const;
-    void prepararNovaJogada(); // Reseta o jardineiro
+    void prepararNovaJogada();
+    void entrarJardineiro(int linha, int coluna);
+    void sairJardineiro();
 };
 
 #endif
