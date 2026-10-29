@@ -6,7 +6,7 @@ O **Garden Simulator** é uma aplicação de consola desenvolvida em C++ que sim
 
 Este projeto foi desenvolvido no âmbito da unidade curricular de **Programação Orientada a Objetos (POO)** da Licenciatura em Engenharia Informática no **Instituto Superior de Engenharia de Coimbra (ISEC - DEIS)**, referente ao ano letivo 2025/2026.
 
-O objetivo pedagógico central consiste na aplicação prática dos pilares da programação orientada a objetos — encapsulamento, composição, herança e polimorfismo — aliados a uma gestão rigorosa de memória dinâmica em C++. Por restrição de desenho arquitetural, a estrutura espacial do terreno não recorre a contentores da biblioteca padrão, sendo implementada através de alocação dinâmica direta.
+O objetivo pedagógico central consiste na aplicação prática dos pilares da programação orientada a objetos, encapsulamento, composição, herança e polimorfismo — aliados a uma gestão rigorosa de memória dinâmica em C++. Por restrição de desenho arquitetural, a estrutura espacial do terreno não recorre a contentores da biblioteca padrão, sendo implementada através de alocação dinâmica direta.
 
 ## Arquitetura e Tecnologias
 
