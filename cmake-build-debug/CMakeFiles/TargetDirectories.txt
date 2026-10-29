@@ -1,3 +1,0 @@
-D:/AULAS-2ºano/1ºsemestre/POO/tp/cmake-build-debug/CMakeFiles/tp.dir
-D:/AULAS-2ºano/1ºsemestre/POO/tp/cmake-build-debug/CMakeFiles/edit_cache.dir
-D:/AULAS-2ºano/1ºsemestre/POO/tp/cmake-build-debug/CMakeFiles/rebuild_cache.dir
