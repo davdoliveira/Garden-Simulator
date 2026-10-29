@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.20)
 project(tp)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -10,7 +10,7 @@ add_executable(tp src/main.cpp
         include/celula.h
         src/jardineiro.cpp
         include/jardineiro.h
-        include/settings.h
+        include/Settings.h
         src/comandos.cpp
         include/comandos.h
         src/planta.cpp

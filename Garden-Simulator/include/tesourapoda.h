@@ -7,8 +7,8 @@ class TesouraPoda : public Ferramenta {
 public:
     TesouraPoda();
     void usar(Jardim* jardim, int lin, int col) override;
-    std::string getTipo() const override { return "TesouraPoda"; }
-
+    std::string getTipo() const override { return "Tesoura de Poda"; }
+    std::string getDetalhes() const override { return "Durabilidade: Infinita (elimina plantas feias)"; }
     Ferramenta* duplicar() const override { return new TesouraPoda(*this); }
 };
 

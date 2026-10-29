@@ -6,19 +6,17 @@
 
 class ErvaDaninha : public Planta {
 private:
-    int instantes_desde_multiplicacao = 0;  // Contador para cooldown
+    int instantes_desde_multiplicacao = 0;
 
 public:
-    ErvaDaninha();  // Inicializa com 5 água e 5 nutrientes
+    ErvaDaninha();
 
     char getSimbolo() const override { return 'e'; }
+    std::string getNomeEspecie() const override { return "Erva Daninha"; }
+    std::string getBeleza() const override { return "Feia"; }
 
-    // Comportamento por instante
     void atualizar(Jardim* jardim, int lin, int col) override;
-
-    // Tenta multiplicar, matando a planta vizinha se necessário
     bool tentarMultiplicar(Jardim* jardim, int lin, int col);
-
     bool eFeia() const override { return true; }
 
     Planta* duplicar() const override { return new ErvaDaninha(*this); }

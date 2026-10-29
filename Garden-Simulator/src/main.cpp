@@ -1,15 +1,19 @@
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include "../include/comandos.h"
+
 using namespace std;
 
 int main() {
+    srand(static_cast<unsigned int>(time(nullptr)));
+
     Comando comando;
     string entrada;
 
-    cout << "=== simulador de jardim ===\n";
+    cout << "=== Simulador de Jardim (POO 25/26) ===" << endl;
     cout << "> ";
     while (getline(cin, entrada) && comando.processar(entrada)) {
-        // Pede o próximo comando
         cout << "> ";
     }
     return 0;

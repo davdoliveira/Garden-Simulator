@@ -1,7 +1,3 @@
-//
-// Created by david on 17/10/2025.
-//
-
 #include "../include/celula.h"
 #include "../include/planta.h"
 #include "../include/ferramenta.h"
@@ -9,12 +5,16 @@
 Celula::Celula() : agua(0), nutrientes(0), planta(nullptr), ferramenta(nullptr) {}
 
 void Celula::setPlanta(Planta* p) {
-    if (planta != nullptr) delete planta;  // Libera planta antiga
+    if (planta != nullptr && planta != p) {
+        delete planta;
+    }
     planta = p;
 }
 
 void Celula::setFerramenta(Ferramenta* f) {
-    if (ferramenta != nullptr) delete ferramenta;
+    if (ferramenta != nullptr && ferramenta != f) {
+        delete ferramenta;
+    }
     ferramenta = f;
 }
 
@@ -33,18 +33,18 @@ void Celula::removerFerramenta() {
 }
 
 char Celula::getSimbolo() const {
-    // Prioridade: jardineiro > planta > ferramenta > .
-    if (ferramenta != nullptr) {
-        return ferramenta->getSimbolo();
-    } else if (planta != nullptr) {
+    // Prioridade visual na celula: planta > ferramenta > espaço vazio
+    if (planta != nullptr) {
         return planta->getSimbolo();
+    } else if (ferramenta != nullptr) {
+        return ferramenta->getSimbolo();
     } else {
-        return '.';
+        return ' ';
     }
 }
 
 void Celula::esquecerFerramenta() {
-    ferramenta = nullptr; // Apenas coloca a null, NÃO faz delete!
+    ferramenta = nullptr;
 }
 
 Celula::~Celula() {

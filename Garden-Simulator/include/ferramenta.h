@@ -3,29 +3,35 @@
 
 #include <string>
 
-class Jardim;  // Forward declaration
+class Jardim;
 
 class Ferramenta {
+private:
+    static int proximo_num_serie;
+
 protected:
-    int usos_maximos;       // 0 = infinito (ex: Tesoura)
-    int usos_restantes;     // Contador de usos restantes
-    char simbolo;           // Símbolo visual no jardim
+    int num_serie;
+    int capacidade_maxima; // 0 = infinito (ex: Tesoura de Poda)
+    int quantidade_atual;  // Água no regador, adubo no pacote, usos na FerramentaZ
+    char simbolo;
 
 public:
-    Ferramenta(int max_usos, char simb);
-
+    Ferramenta(int cap_max, char simb);
+    Ferramenta(const Ferramenta& outra) = default;
     virtual ~Ferramenta() = default;
 
     virtual void usar(Jardim* jardim, int lin, int col) = 0;
     virtual std::string getTipo() const = 0;
-
+    virtual std::string getDetalhes() const = 0;
     virtual Ferramenta* duplicar() const = 0;
 
+    int getNumSerie() const { return num_serie; }
     char getSimbolo() const { return simbolo; }
-    bool estaDesgastada() const { return usos_maximos > 0 && usos_restantes <= 0; }
+    int getQuantidadeAtual() const { return quantidade_atual; }
+    int getCapacidadeMaxima() const { return capacidade_maxima; }
 
-    void reduzirUso();  // Só reduz se não for infinita
-    int getUsosRestantes() const { return usos_restantes; }
+    bool estaDesgastada() const { return capacidade_maxima > 0 && quantidade_atual <= 0; }
+    void gastar(int qtd);
 };
 
 #endif // FERRAMENTA_H

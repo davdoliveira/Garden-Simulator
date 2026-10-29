@@ -1,40 +1,41 @@
-//
-// Created by david on 02/11/2025.
-//
-
 #include "../include/ervadaninha.h"
 #include "../include/celula.h"
+#include "../include/Settings.h"
+#include <iostream>
 
-ErvaDaninha::ErvaDaninha() : Planta(5, 5) {
-    // Inicial: 5 água e 5 nutrientes
+ErvaDaninha::ErvaDaninha() : Planta(Settings::ErvaDaninha::inicial_agua, Settings::ErvaDaninha::inicial_nutrientes) {
     instantes_desde_multiplicacao = 0;
 }
 
 bool ErvaDaninha::tentarMultiplicar(Jardim* jardim, int lin, int col) {
-    // Condições: nutrientes > 30 e cooldown >= 5
-    if (nutrientes_interna <= 30 || instantes_desde_multiplicacao < 5) {
+    if (nutrientes_interna <= Settings::ErvaDaninha::multiplica_nutrientes_maior ||
+        instantes_desde_multiplicacao < Settings::ErvaDaninha::multiplica_instantes) {
         return false;
     }
 
     int dirs[4][2] = { {-1,0}, {1,0}, {0,-1}, {0,1} };
-    for (int i = 0; i < 4; ++i) { // Loop C++ clássico
+    for (int i = 0; i < 4; ++i) {
         int nl = lin + dirs[i][0];
         int nc = col + dirs[i][1];
         if (jardim->posicaoValida(nl, nc)) {
             Celula& cel_vizinha = jardim->getCelula(nl, nc);
 
-            // Mata a planta que lá estiver (se houver)
             if (cel_vizinha.getPlanta() != nullptr) {
-                delete cel_vizinha.getPlanta();
-                cel_vizinha.setPlanta(nullptr);
+                std::cout << "A Erva Daninha em " << jardim->posicaoParaString(lin, col)
+                          << " sufocou a planta em " << jardim->posicaoParaString(nl, nc) << "!" << std::endl;
+                cel_vizinha.removerPlanta();
             }
 
-            // Cria nova erva daninha
             ErvaDaninha* nova = new ErvaDaninha();
-            cel_vizinha.setPlanta(nova);
+            nova->agua_interna = Settings::ErvaDaninha::inicial_agua;
+            nova->nutrientes_interna = Settings::ErvaDaninha::nova_nutrientes;
+            nova->setJaAgiu(true);
 
-            // Reseta o cooldown
+            cel_vizinha.setPlanta(nova);
             instantes_desde_multiplicacao = 0;
+
+            std::cout << "Nasceu uma nova Erva Daninha em " << jardim->posicaoParaString(nl, nc)
+                      << " (multiplicada de " << jardim->posicaoParaString(lin, col) << ")." << std::endl;
             return true;
         }
     }
@@ -44,27 +45,22 @@ bool ErvaDaninha::tentarMultiplicar(Jardim* jardim, int lin, int col) {
 void ErvaDaninha::atualizar(Jardim* jardim, int lin, int col) {
     Celula& cel = jardim->getCelula(lin, col);
 
-    // 1. Absorve 1 água e 1 nut do solo (se houver)
-    if (cel.getAgua() > 0) {
-        agua_interna++;
-        cel.setAgua(cel.getAgua() - 1);
-    }
-    if (cel.getNutrientes() > 0) {
-        nutrientes_interna++;
-        cel.setNutrientes(cel.getNutrientes() - 1);
-    }
+    int absorve_agua = (Settings::ErvaDaninha::absorcao_agua < cel.getAgua() ? Settings::ErvaDaninha::absorcao_agua : cel.getAgua());
+    int absorve_nut = (Settings::ErvaDaninha::absorcao_nutrientes < cel.getNutrientes() ? Settings::ErvaDaninha::absorcao_nutrientes : cel.getNutrientes());
 
-    // 2. Verificar morte por idade
-    if (idade >= 60) {
+    agua_interna += absorve_agua;
+    nutrientes_interna += absorve_nut;
+    cel.setAgua(cel.getAgua() - absorve_agua);
+    cel.setNutrientes(cel.getNutrientes() - absorve_nut);
+
+    envelhecer();
+    instantes_desde_multiplicacao++;
+
+    if (idade >= Settings::ErvaDaninha::morre_instantes) {
+        std::cout << "A Erva Daninha em " << jardim->posicaoParaString(lin, col) << " morreu de velhice." << std::endl;
         cel.removerPlanta();
-        delete this;
         return;
     }
 
-    // 3. Tentar multiplicar
     tentarMultiplicar(jardim, lin, col);
-
-    // 4. Atualizar cooldown e idade
-    instantes_desde_multiplicacao++;
-    envelhecer();
 }

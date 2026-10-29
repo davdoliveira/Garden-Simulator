@@ -9,7 +9,6 @@ using namespace std;
 
 Comando::~Comando() {
     delete jardim;
-    // Limpar memória dos saves ao sair
     for (auto const& [nome, saveJardim] : saves) {
         delete saveJardim;
     }
@@ -24,17 +23,32 @@ Coordenadas Comando::stringParaPosicao(const std::string& pos) const {
     }
     resultado.linha = pos[0] - 'a';
     resultado.coluna = pos[1] - 'a';
-    if (resultado.linha >= 26 || resultado.coluna >= 26) {
-        return resultado;
+    if (jardim != nullptr) {
+        if (!jardim->posicaoValida(resultado.linha, resultado.coluna)) {
+            return resultado;
+        }
     }
     resultado.valida = true;
     return resultado;
 }
 
+bool Comando::lerInteiroPositivo(const std::string& str, int& valor, bool permitirZero) const {
+    try {
+        size_t pos = 0;
+        int v = std::stoi(str, &pos);
+        if (pos != str.length()) return false;
+        if (permitirZero ? (v < 0) : (v <= 0)) return false;
+        valor = v;
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
 bool Comando::processar(const string& comando) {
     if (comando.empty()) return true;
 
-    const int MAX_TOKENS = 5;
+    const int MAX_TOKENS = 6;
     string tokens[MAX_TOKENS];
     int numTokens = 0;
 
@@ -58,193 +72,305 @@ bool Comando::processar(const string& comando) {
             cout << "Sintaxe: jardim <linhas> <colunas>" << endl;
             return true;
         }
-        int linhas, colunas;
-        stringstream ss_linhas(tokens[1]);
-        stringstream ss_colunas(tokens[2]);
-
-        if (!(ss_linhas >> linhas) || !(ss_colunas >> colunas)) {
-            cout << "Erro: Dimensoes devem ser inteiros." << endl;
+        int linhas = 0, colunas = 0;
+        if (!lerInteiroPositivo(tokens[1], linhas) || !lerInteiroPositivo(tokens[2], colunas)) {
+            cout << "Erro: As dimensoes devem ser numeros inteiros positivos." << endl;
             return true;
         }
-
         if (linhas < 1 || linhas > 26 || colunas < 1 || colunas > 26) {
-            cout << "Erro: Dimensoes invalidas (1-26)." << endl;
+            cout << "Erro: Dimensoes invalidas (maximo 26x26)." << endl;
             return true;
         }
         jardim = new Jardim(linhas, colunas);
-        cout << "\nJardim criado: " << linhas << "x" << colunas << "." << endl;
+        cout << "Jardim criado com dimensoes " << linhas << "x" << colunas << "." << endl;
         jardim->imprimir();
         return true;
     }
 
-    // --- 2. SAIR/FIM ---
-    if (nomeComando == "sair" || nomeComando == "fim") {
-        if (numTokens != 1) { cout << "Erro: 'sair' sem parametros." << endl; return true; }
-        cout << "Simulacao encerrada." << endl;
+    // --- 2. FIM ---
+    if (nomeComando == "fim") {
+        if (numTokens != 1) {
+            cout << "Sintaxe: fim (sem parametros)" << endl;
+            return true;
+        }
+        cout << "Simulacao encerrada. A libertar recursos..." << endl;
         return false;
     }
 
     // --- 3. EXECUTA ---
     if (nomeComando == "executa") {
-        if (numTokens != 2) { cout << "Sintaxe: executa <ficheiro>" << endl; return true; }
+        if (numTokens != 2) {
+            cout << "Sintaxe: executa <nome-do-ficheiro>" << endl;
+            return true;
+        }
         string nomeFicheiro = tokens[1];
         ifstream ficheiro(nomeFicheiro);
 
         if (!ficheiro.is_open()) {
-            cout << "Erro ao abrir '" << nomeFicheiro << "'." << endl;
+            cout << "Erro: Nao foi possivel abrir o ficheiro '" << nomeFicheiro << "'." << endl;
             return true;
         }
-        cout << ">>> Executando script '" << nomeFicheiro << "'..." << endl;
+        cout << ">>> A executar comandos do ficheiro '" << nomeFicheiro << "'..." << endl;
         string linha;
         while (getline(ficheiro, linha)) {
+            if (!linha.empty() && linha.back() == '\r') {
+                linha.pop_back();
+            }
             if (linha.empty()) continue;
             cout << "> " << linha << endl;
             if (!processar(linha)) return false;
         }
         ficheiro.close();
-        cout << ">>> Fim do script." << endl;
+        cout << ">>> Fim da execucao do ficheiro '" << nomeFicheiro << "'." << endl;
         return true;
     }
 
+    // Todos os restantes comandos exigem que o jardim já tenha sido criado
     if (jardim == nullptr) {
-        cout << "Erro: Crie o jardim primeiro." << endl;
+        cout << "Erro: O jardim ainda nao foi criado. Execute primeiro 'jardim <n> <n>'." << endl;
         return true;
     }
 
-    // --- 4. ENTRA ---
-    if (nomeComando == "entra") {
-        if (numTokens != 2) { cout << "Sintaxe: entra <pos>" << endl; return true; }
-        Coordenadas pos = stringParaPosicao(tokens[1]);
-        if (!pos.valida) { cout << "Posicao invalida." << endl; return true; }
-        jardim->entrarJardineiro(pos.linha, pos.coluna);
-        jardim->imprimir();
-        return true;
-
-    // --- 5. SAI (do jardim) ---
-    } else if (nomeComando == "sai") {
-        // Se este comando entrar em conflito com o sair do programa, renomeia no input ou ajusta a logica.
-        // Assumindo que "fim" termina o programa e "sai" sai do jardim:
-        jardim->sairJardineiro();
-        jardim->imprimir();
-        return true;
-
-    // --- 6. AVANCA ---
-    } else if (nomeComando == "avanca") {
-        int instantes = 1;
-        if (numTokens == 2) {
-            try { instantes = stoi(tokens[1]); } catch(...) {}
-        }
-        cout << "Simulando " << instantes << " instantes..." << endl;
-        for (int i = 0; i < instantes; i++) jardim->atualizarInstante();
-        jardim->prepararNovaJogada();
-        jardim->imprimir();
-        return true;
-
-    // --- 7. PLANTA ---
-    } else if (nomeComando == "planta") {
-        if (numTokens != 3) { cout << "Sintaxe: planta <pos> <tipo>" << endl; return true; }
-        Coordenadas pos = stringParaPosicao(tokens[1]);
-        if (!pos.valida) { cout << "Posicao invalida." << endl; return true; }
-        jardim->adicionarPlanta(tokens[2], pos.linha, pos.coluna);
-        jardim->imprimir();
-        return true;
-
-    // --- 8. COLHE ---
-    } else if (nomeComando == "colhe") {
-        if (numTokens != 2) { cout << "Sintaxe: colhe <pos>" << endl; return true; }
-        Coordenadas pos = stringParaPosicao(tokens[1]);
-        if (!pos.valida) { cout << "Posicao invalida." << endl; return true; }
-        jardim->removerPlanta(pos.linha, pos.coluna);
-        jardim->imprimir();
-        return true;
-
-    // --- 9. LISTAGENS ---
-    } else if (nomeComando == "lplanta") {
-        if (numTokens != 2) { cout << "Sintaxe: lplanta <pos>" << endl; return true; }
-        Coordenadas pos = stringParaPosicao(tokens[1]);
-        if (!pos.valida || !jardim->posicaoValida(pos.linha, pos.coluna)) return true;
-        Celula& cel = jardim->getCelula(pos.linha, pos.coluna);
-        Planta* p = cel.getPlanta();
-        if (p) cout << "Planta " << p->getSimbolo() << " | Idade: " << p->getIdade()
-                    << " | Agua: " << p->getAguaInterna() << " | Nut: " << p->getNutrientesInterna() << endl;
-        else cout << "Nao ha planta." << endl;
-        return true;
-
-    } else if (nomeComando == "lsolo") {
-        if (numTokens < 2) { cout << "Sintaxe: lsolo <pos> [raio]" << endl; return true; }
-        Coordenadas pos = stringParaPosicao(tokens[1]);
-        int raio = (numTokens == 3) ? stoi(tokens[2]) : 0;
-        if (raio == 0) cout << "Solo: A=" << jardim->getCelula(pos.linha, pos.coluna).getAgua()
-                            << " N=" << jardim->getCelula(pos.linha, pos.coluna).getNutrientes() << endl;
-        else {
-             // Loop de raio (simplificado para brevidade)
-             cout << "--- Solo Raio " << raio << " ---" << endl;
-        }
-        return true;
-
-    } else if (nomeComando == "lferr") {
-        jardim->listarFerramentasJardineiro();
-        return true;
-
-    // --- 10. MOVIMENTO ---
-    } else if (nomeComando == "e" || nomeComando == "d" || nomeComando == "c" || nomeComando == "b") {
-        jardim->moverJardineiro(nomeComando);
-        jardim->imprimir();
-        return true;
-
-    // --- 11. FERRAMENTAS ---
-    } else if (nomeComando == "compra") {
-        if (numTokens == 2) jardim->comprarFerramenta(tokens[1]);
-        jardim->imprimir();
-        return true;
-    } else if (nomeComando == "usar") {
-        if (numTokens == 2) jardim->usarFerramentaJardineiro(tokens[1][0]);
-        jardim->imprimir();
-        return true;
-    }
-
-    // --- 12. PERSISTÊNCIA (GRAVA/RECUPERA/APAGA) ---
-    else if (nomeComando == "grava") {
-        if (numTokens != 2) { cout << "Sintaxe: grava <nome>" << endl; return true; }
-        string nome = tokens[1];
-        if (saves.find(nome) != saves.end()) delete saves[nome];
-
-        saves[nome] = new Jardim(*jardim); // Chama o Construtor de Cópia
-        cout << "Jardim gravado como '" << nome << "'." << endl;
-        return true;
-
-    } else if (nomeComando == "recupera") {
-        if (numTokens != 2) { cout << "Sintaxe: recupera <nome>" << endl; return true; }
-        string nome = tokens[1];
-        if (saves.find(nome) == saves.end()) {
-            cout << "Erro: Save '" << nome << "' nao encontrado." << endl;
+    // --- 4. AVANCA ---
+    if (nomeComando == "avanca") {
+        if (numTokens > 2) {
+            cout << "Sintaxe: avanca [n]" << endl;
             return true;
         }
-        delete jardim; // Apaga o atual
-        jardim = new Jardim(*saves[nome]); // Cria nova cópia a partir do save
-        cout << "Jardim recuperado de '" << nome << "'." << endl;
+        int instantes = 1;
+        if (numTokens == 2) {
+            if (!lerInteiroPositivo(tokens[1], instantes)) {
+                cout << "Erro: O numero de instantes deve ser um inteiro positivo." << endl;
+                return true;
+            }
+        }
+        for (int i = 0; i < instantes; i++) {
+            cout << "--- Instante " << (jardim->getInstanteAtual() + 1) << " ---" << endl;
+            jardim->atualizarInstante();
+        }
         jardim->imprimir();
         return true;
+    }
 
-    } else if (nomeComando == "apaga") {
-        if (numTokens != 2) { cout << "Sintaxe: apaga <nome>" << endl; return true; }
+    // --- 5. COMANDOS DE LISTAGEM ---
+    if (nomeComando == "lplantas") {
+        if (numTokens != 1) {
+            cout << "Sintaxe: lplantas" << endl;
+            return true;
+        }
+        jardim->listarPlantas();
+        return true;
+    }
+
+    if (nomeComando == "lplanta") {
+        if (numTokens != 2) {
+            cout << "Sintaxe: lplanta <l><c>" << endl;
+            return true;
+        }
+        Coordenadas pos = stringParaPosicao(tokens[1]);
+        if (!pos.valida) {
+            cout << "Erro: Posicao '" << tokens[1] << "' invalida ou fora dos limites." << endl;
+            return true;
+        }
+        jardim->listarPlanta(pos.linha, pos.coluna);
+        return true;
+    }
+
+    if (nomeComando == "larea") {
+        if (numTokens != 1) {
+            cout << "Sintaxe: larea" << endl;
+            return true;
+        }
+        jardim->listarArea();
+        return true;
+    }
+
+    if (nomeComando == "lsolo") {
+        if (numTokens < 2 || numTokens > 3) {
+            cout << "Sintaxe: lsolo <l><c> [n]" << endl;
+            return true;
+        }
+        Coordenadas pos = stringParaPosicao(tokens[1]);
+        if (!pos.valida) {
+            cout << "Erro: Posicao '" << tokens[1] << "' invalida ou fora dos limites." << endl;
+            return true;
+        }
+        int raio = 0;
+        if (numTokens == 3) {
+            if (!lerInteiroPositivo(tokens[2], raio, true)) {
+                cout << "Erro: O raio deve ser um inteiro nao negativo." << endl;
+                return true;
+            }
+        }
+        jardim->listarSolo(pos.linha, pos.coluna, raio);
+        return true;
+    }
+
+    if (nomeComando == "lferr") {
+        if (numTokens != 1) {
+            cout << "Sintaxe: lferr" << endl;
+            return true;
+        }
+        jardim->listarFerramentasJardineiro();
+        return true;
+    }
+
+    // --- 6. COMANDOS DE AÇÃO ---
+    if (nomeComando == "colhe") {
+        if (numTokens != 2) {
+            cout << "Sintaxe: colhe <l><c>" << endl;
+            return true;
+        }
+        Coordenadas pos = stringParaPosicao(tokens[1]);
+        if (!pos.valida) {
+            cout << "Erro: Posicao '" << tokens[1] << "' invalida ou fora dos limites." << endl;
+            return true;
+        }
+        if (jardim->removerPlanta(pos.linha, pos.coluna)) {
+            jardim->imprimir();
+        }
+        return true;
+    }
+
+    if (nomeComando == "planta") {
+        if (numTokens != 3) {
+            cout << "Sintaxe: planta <l><c> <tipo>" << endl;
+            return true;
+        }
+        Coordenadas pos = stringParaPosicao(tokens[1]);
+        if (!pos.valida) {
+            cout << "Erro: Posicao '" << tokens[1] << "' invalida ou fora dos limites." << endl;
+            return true;
+        }
+        if (jardim->adicionarPlanta(tokens[2], pos.linha, pos.coluna)) {
+            jardim->imprimir();
+        }
+        return true;
+    }
+
+    if (nomeComando == "larga") {
+        if (numTokens != 1) {
+            cout << "Sintaxe: larga" << endl;
+            return true;
+        }
+        jardim->largarFerramentaJardineiro();
+        return true;
+    }
+
+    if (nomeComando == "pega") {
+        if (numTokens != 2) {
+            cout << "Sintaxe: pega <n>" << endl;
+            return true;
+        }
+        int num_serie = 0;
+        if (!lerInteiroPositivo(tokens[1], num_serie)) {
+            cout << "Erro: O numero de serie deve ser um inteiro positivo." << endl;
+            return true;
+        }
+        jardim->pegarFerramentaJardineiro(num_serie);
+        return true;
+    }
+
+    if (nomeComando == "compra") {
+        if (numTokens != 2) {
+            cout << "Sintaxe: compra <c>" << endl;
+            return true;
+        }
+        jardim->comprarFerramenta(tokens[1]);
+        return true;
+    }
+
+    // --- 7. MOVIMENTO DO JARDINEIRO ---
+    if (nomeComando == "e" || nomeComando == "d" || nomeComando == "c" || nomeComando == "b") {
+        if (numTokens != 1) {
+            cout << "Sintaxe: " << nomeComando << " (sem parametros)" << endl;
+            return true;
+        }
+        if (jardim->moverJardineiro(nomeComando)) {
+            jardim->imprimir();
+        }
+        return true;
+    }
+
+    if (nomeComando == "entra") {
+        if (numTokens != 2) {
+            cout << "Sintaxe: entra <l><c>" << endl;
+            return true;
+        }
+        Coordenadas pos = stringParaPosicao(tokens[1]);
+        if (!pos.valida) {
+            cout << "Erro: Posicao '" << tokens[1] << "' invalida ou fora dos limites." << endl;
+            return true;
+        }
+        if (jardim->entrarJardineiro(pos.linha, pos.coluna)) {
+            jardim->imprimir();
+        }
+        return true;
+    }
+
+    if (nomeComando == "sai") {
+        if (numTokens != 1) {
+            cout << "Sintaxe: sai" << endl;
+            return true;
+        }
+        if (jardim->sairJardineiro()) {
+            jardim->imprimir();
+        }
+        return true;
+    }
+
+    // --- 8. GRAVA / RECUPERA / APAGA ---
+    if (nomeComando == "grava") {
+        if (numTokens != 2) {
+            cout << "Sintaxe: grava <nome>" << endl;
+            return true;
+        }
         string nome = tokens[1];
         if (saves.find(nome) != saves.end()) {
             delete saves[nome];
-            saves.erase(nome);
-            cout << "Save '" << nome << "' apagado." << endl;
+        }
+        saves[nome] = new Jardim(*jardim);
+        cout << "Estado do jardim gravado sob o nome '" << nome << "'." << endl;
+        return true;
+    }
+
+    if (nomeComando == "recupera") {
+        if (numTokens != 2) {
+            cout << "Sintaxe: recupera <nome>" << endl;
+            return true;
+        }
+        string nome = tokens[1];
+        auto it = saves.find(nome);
+        if (it == saves.end()) {
+            cout << "Erro: Nao existe nenhuma gravacao com o nome '" << nome << "'." << endl;
+            return true;
+        }
+        delete jardim;
+        jardim = new Jardim(*(it->second));
+        delete it->second;
+        saves.erase(it);
+        cout << "Jardim recuperado da gravacao '" << nome << "' (copia eliminada)." << endl;
+        jardim->imprimir();
+        return true;
+    }
+
+    if (nomeComando == "apaga") {
+        if (numTokens != 2) {
+            cout << "Sintaxe: apaga <nome>" << endl;
+            return true;
+        }
+        string nome = tokens[1];
+        auto it = saves.find(nome);
+        if (it != saves.end()) {
+            delete it->second;
+            saves.erase(it);
+            cout << "Gravacao '" << nome << "' apagada com sucesso." << endl;
         } else {
-            cout << "Erro: Save nao encontrado." << endl;
+            cout << "Erro: Gravacao '" << nome << "' nao encontrada." << endl;
         }
         return true;
     }
 
-    // Outros comandos
-    else if (nomeComando == "lplantas" || nomeComando == "larea" || nomeComando == "larga") {
-        cout << "Comando validado." << endl;
-        return true;
-    }
-
-    cout << "Comando desconhecido." << endl;
+    cout << "Erro: Comando '" << nomeComando << "' desconhecido." << endl;
     return true;
 }

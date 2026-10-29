@@ -1,10 +1,16 @@
 #include "../include/ferramenta.h"
 
-Ferramenta::Ferramenta(int max_usos, char simb)
-    : usos_maximos(max_usos), usos_restantes(max_usos), simbolo(simb) {}
+int Ferramenta::proximo_num_serie = 1;
 
-void Ferramenta::reduzirUso() {
-    if (usos_maximos > 0) {  // Só reduz se tiver limite (0 = infinito)
-        usos_restantes--;
+Ferramenta::Ferramenta(int cap_max, char simb)
+    : num_serie(proximo_num_serie++),
+      capacidade_maxima(cap_max),
+      quantidade_atual(cap_max),
+      simbolo(simb) {}
+
+void Ferramenta::gastar(int qtd) {
+    if (capacidade_maxima > 0) {
+        quantidade_atual -= qtd;
+        if (quantidade_atual < 0) quantidade_atual = 0;
     }
 }

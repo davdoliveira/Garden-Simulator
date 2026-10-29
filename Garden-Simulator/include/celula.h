@@ -1,7 +1,3 @@
-//
-// Created by david on 17/10/2025.
-//
-
 #ifndef CELULA_H
 #define CELULA_H
 
@@ -22,8 +18,8 @@ public:
 
     int getAgua() const { return agua; }
     int getNutrientes() const { return nutrientes; }
-    void setAgua(int a) { agua = a; }
-    void setNutrientes(int n) { nutrientes = n; }
+    void setAgua(int a) { agua = (a < 0) ? 0 : a; }
+    void setNutrientes(int n) { nutrientes = (n < 0) ? 0 : n; }
 
     Planta* getPlanta() const { return planta; }
     Ferramenta* getFerramenta() const { return ferramenta; }
@@ -39,5 +35,4 @@ public:
     ~Celula();
 };
 
-
-#endif //CELULA_H
+#endif // CELULA_H

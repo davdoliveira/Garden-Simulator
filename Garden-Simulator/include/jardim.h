@@ -1,10 +1,11 @@
 #ifndef JARDIM_H
 #define JARDIM_H
 
-#include <vector>
 #include <string>
 #include "celula.h"
 #include "jardineiro.h"
+
+class Ferramenta;
 
 class Jardim {
 private:
@@ -12,36 +13,44 @@ private:
     int linhas;
     int colunas;
     Jardineiro* jardineiro;
+    int instante_atual;
+
+    Ferramenta* criarFerramentaAleatoria();
+    void colocarFerramentaAleatoria();
+    void verificarApanhaFerramenta();
 
 public:
     Jardim(int lin, int col);
-
-    // --- NOVO: Construtor de Cópia ---
     Jardim(const Jardim& outro);
-
     ~Jardim();
 
-    // Métodos de Acesso
     int getLinhas() const { return linhas; }
     int getColunas() const { return colunas; }
+    int getInstanteAtual() const { return instante_atual; }
+    Jardineiro* getJardineiro() const { return jardineiro; }
 
-    // Gestão do Tabuleiro
     Celula& getCelula(int lin, int col);
+    const Celula& getCelula(int lin, int col) const;
     bool posicaoValida(int lin, int col) const;
     std::string posicaoParaString(int lin, int col) const;
-    void imprimir();
+    void imprimir() const;
 
-    // Motor
     void atualizarInstante();
-    void adicionarPlanta(const std::string& tipo, int linha, int coluna);
-    void removerPlanta(int linha, int coluna);
-    void moverJardineiro(const std::string& direcao);
-    void usarFerramentaJardineiro(char tipo);
-    void comprarFerramenta(const std::string& tipo);
+    bool adicionarPlanta(const std::string& tipo, int linha, int coluna);
+    bool removerPlanta(int linha, int coluna);
+    bool moverJardineiro(const std::string& direcao);
+    bool pegarFerramentaJardineiro(int num_serie);
+    void largarFerramentaJardineiro();
+    bool comprarFerramenta(const std::string& tipo);
+
     void listarFerramentasJardineiro() const;
-    void prepararNovaJogada();
-    void entrarJardineiro(int linha, int coluna);
-    void sairJardineiro();
+    void listarPlantas() const;
+    void listarPlanta(int lin, int col) const;
+    void listarArea() const;
+    void listarSolo(int lin, int col, int raio) const;
+
+    bool entrarJardineiro(int linha, int coluna);
+    bool sairJardineiro();
 };
 
-#endif
+#endif // JARDIM_H

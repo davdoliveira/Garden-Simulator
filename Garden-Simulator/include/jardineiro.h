@@ -12,49 +12,48 @@ private:
     Ferramenta** ferramentas;
     int numFerramentas;
     int capacidade;
+    Ferramenta* ferramenta_na_mao;
+
     void redimensionar();
 
-    // Contadores de Fadiga
+    // Contadores por turno (entre instantes)
     int cont_movimentos = 0;
     int cont_plantacoes = 0;
     int cont_colheitas = 0;
-    int cont_entradas_saidas = 0;
+    int cont_entradas = 0;
+    int cont_saidas = 0;
 
 public:
     Jardineiro(int lin, int col);
-
-    // --- NOVO: Construtor de Cópia (Agora Público) ---
     Jardineiro(const Jardineiro& outro);
-
     ~Jardineiro();
 
-    // Getters
     int getLinha() const { return linha; }
     int getColuna() const { return coluna; }
+    bool estaNoJardim() const { return linha != -1 && coluna != -1; }
 
-    // Movimentação
-    void mover(char direcao, int max_lin, int max_col);
+    bool mover(char direcao, int max_lin, int max_col);
     void entrar(int lin, int col);
+    void sair();
 
-    // Ferramentas
     void adicionarFerramenta(Ferramenta* f);
-    void usarFerramenta(char tipo, Jardim* jardim);
-    bool temFerramenta(const std::string& tipo) const;
+    bool pegarFerramenta(int num_serie);
+    void largarFerramenta();
+    void aplicarFerramentaNaMao(Jardim* jardim);
     void listarInventario() const;
 
-    // Regras de Fadiga
     bool podeMover() const;
     bool podePlantar() const;
     bool podeColher() const;
-    bool podeEntrarOuSair() const;
+    bool podeEntrar() const;
+    bool podeSair() const;
 
-    // Registos
     void registarMovimento();
     void registarPlantacao();
     void registarColheita();
-    void registarEntradaSaida();
+    void registarEntrada();
+    void registarSaida();
 
-    void sair();
     void descansar();
 };
 

@@ -1,7 +1,3 @@
-//
-// Created by david on 02/11/2025.
-//
-
 #ifndef PLANTAEXOTICA_H
 #define PLANTAEXOTICA_H
 
@@ -10,17 +6,16 @@
 
 class PlantaExotica : public Planta {
 private:
-    int contador_ciclo = 0;  // Conta instantes para ciclo de 5
+    int contador_ciclo = 0;
 
 public:
-    PlantaExotica();  // Inicializa com 20 água e 20 nutrientes
+    PlantaExotica();
 
     char getSimbolo() const override { return 'x'; }
+    std::string getNomeEspecie() const override { return "Planta Exotica"; }
+    std::string getBeleza() const override { return "Bonita"; }
 
-    // Comportamento por instante
     void atualizar(Jardim* jardim, int lin, int col) override;
-
-    // Tenta injetar nutrientes (ciclo de 5)
     bool tentarInjetarNutrientes(Jardim* jardim, int lin, int col);
 
     Planta* duplicar() const override { return new PlantaExotica(*this); }
